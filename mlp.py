@@ -1,11 +1,12 @@
 from __future__ import division
 from sklearn import metrics
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import resample
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report, confusion_matrix, fbeta_score
 from sklearn import tree
+import os
 import numpy as np
 import random
 import pandas as pd
@@ -15,7 +16,6 @@ import math
 import csv
 import time
 import itertools
-from sklearn.ensemble import RandomForestClassifier
 
 # Loading Data
 data = pd.read_csv("dados.csv", header=0, delimiter=";")
@@ -29,19 +29,26 @@ del data['end_al']
 y = data['sit_al']
 del data['sit_al']
 
+y = list(map(lambda x: not x, y))
+
 with open('output.csv', 'w', 1) as csvfile:
-	for attrs in range(1, 2):
+	for attrs in range(1, 11):
 		spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-		spamwriter.writerow(['Combination', 'Score'])
+		spamwriter.writerow(['Combination', 'Precision', 'Recall', 'F-Measure'])
 		combinations = list(itertools.combinations(data, attrs))
 		for combination in combinations:
 			newdf = data[list(combination)]
 			X_train, X_test, y_train, y_test = train_test_split(newdf, y, test_size=0.33)
-			clf = RandomForestClassifier(n_estimators=20, class_weight='balanced_subsample')
+			clf = RandomForestClassifier(n_estimators=20, class_weight='balanced')
 			clf.fit(X_train, y_train)
 			predicted = clf.predict(X_test)
-			score = 0
-			for i in range(0, len(predicted)):
-				if(predicted[i] == list(y_test)[i]):
-					score = score + 1
-			spamwriter.writerow([str(combination), score / len(predicted)])
+			precision = precision_score(y_test, predicted)
+			recall = recall_score(y_test, predicted)
+			fmeasure = fbeta_score(y_test, predicted, 2)
+			spamwriter.writerow([str(combination), precision, recall, fmeasure])
+			#i_tree = 0
+			#for tree_in_forest in clf.estimators_:
+				#with open('tree_' + str(i_tree) + '.dot', 'w') as my_file:
+				#	my_file = tree.export_graphviz(tree_in_forest, out_file = my_file, feature_names=newdf.columns, filled=True, rounded=True)
+				#os.system('dot -Tpng tree_' + str(i_tree) + '.dot -o tree.png')
+				#i_tree = i_tree + 1
