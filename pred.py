@@ -115,6 +115,12 @@ def transp(x):
 	else:
 		return 0
 
+def sexo(x):
+	if(x == 'F'):
+		return 1
+	else:
+		return 0
+
 # Loading Data
 data = pd.read_csv("bruto.csv", header=0, delimiter=",")
 data = data.fillna(0)
@@ -147,30 +153,38 @@ data['necessidades'] = data.necessidades.map(necessidades)
 #Pre-processamento transp
 data['transp'] = data.transp.map(transp)
 
-#Pre-processamento end aluno
+#Pre-processamento end_al
 le = preprocessing.LabelEncoder()
 le.fit(data['end_al'])
 data['end_al'] = le.transform(data['end_al'])
 
-X = data.values
+#Pre-processamento sexo
+data['sexo'] = data.sexo.map(sexo)
+
 y = np.asarray(data['sit_al'])
+
 del data['necessidades']
 del data['sit_al']
+del data['bairro_al']
+X = data.values
 
 with open('output.csv', 'w', 1) as csvfile:
 	spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	spamwriter.writerow(['Combination', 'Precision Avg', 'Precision Std', 'Recall Avg', 'Recall Std', 'F-Measure Avg', 'F-Measure Std'])
 	skf = StratifiedKFold(n_splits=5)
-	precision = list()
-	recall = list()
-	fmeasure = list()
-	for train_index, test_index in skf.split(X, y):
-		X_train, X_test = X[train_index], X[test_index]
-		y_train, y_test = y[train_index], y[test_index]
-		clf = RandomForestClassifier(n_estimators=100, class_weight='balanced')
-		clf.fit(X_train, y_train)
-		predicted = clf.predict(X_test)
-		precision.append(precision_score(y_test, predicted))
-		recall.append(recall_score(y_test, predicted))
-		fmeasure.append(fbeta_score(y_test, predicted, 2))
-	spamwriter.writerow([0, np.mean(precision), np.std(precision), np.mean(recall), np.std(recall), np.mean(fmeasure), np.std(fmeasure)])
+	for attrs in range(1, len(X[0])):
+		combinations = list(itertools.combinations(data, attrs))
+		for combination in combinations:
+			precision = list()
+			recall = list()
+			fmeasure = list()
+			for train_index, test_index in skf.split(X, y):
+				X_train, X_test = X[train_index], X[test_index]
+				y_train, y_test = y[train_index], y[test_index]
+				clf = RandomForestClassifier(n_estimators=10, class_weight='balanced')
+				clf.fit(X_train, y_train)
+				predicted = clf.predict(X_test)
+				precision.append(precision_score(y_test, predicted))
+				recall.append(recall_score(y_test, predicted))
+				fmeasure.append(fbeta_score(y_test, predicted, 2))
+			spamwriter.writerow([str(combination), np.mean(precision), np.std(precision), np.mean(recall), np.std(recall), np.mean(fmeasure), np.std(fmeasure)])
