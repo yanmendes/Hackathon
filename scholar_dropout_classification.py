@@ -17,14 +17,17 @@ from sklearn import decomposition, preprocessing
 data = pd.read_csv("dados.csv", header=0, delimiter=";")
 data = data.fillna(-1)
 
+data=data[data['sit_al']!=4]
+
 for l in ['end_esc', 'end_al', ]:
     aux = preprocessing.LabelEncoder().fit_transform([str(i) for i in data[l]])    
     data[l] = aux
 
 
 # Indexing the data
-
-X = data.drop('sit_al', axis=1)
+target_var=['sit_al']
+drop_var=['end_esc', 'end_al']
+X = data.drop(target_var + drop_var, axis=1)
 y = data['sit_al']
 
 # In[]
