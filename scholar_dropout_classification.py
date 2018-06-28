@@ -18,14 +18,34 @@ data = pd.read_csv("bruto.csv", header=0, delimiter=",")
 #data = data.fillna(-1)
 data = data.query('sit_al == "Ativo" or sit_al == "Inativo"')
 
+target_var=['sit_al']
+drop_var=['end_al', 'bairro_al']
+count_var=['etnia','turno']
+
+# In[]
+for t in target_var:
+    for k in count_var:
+        print('-'*32)
+        for d,df in data.groupby(k): 
+            a=df[t].value_counts()
+            s= a[1]/a[0]*100 if len(a)>1 else 0
+            print(d,'\t\t',s)
+            
+        print('-'*32)
+# In[]
+for t in target_var:
+    for k in count_var:
+        g=sns.countplot(x=k, hue=t, data=data)
+        pl.xticks(rotation=90)
+        pl.show()
+        
+        
+# In[]
 for l in data.columns:
     aux = preprocessing.LabelEncoder().fit_transform([str(i) for i in data[l]])    
     data[l] = aux
 
-
 # Indexing the data
-target_var=['sit_al']
-drop_var=['end_al', 'bairro_al']
 X = data.drop(target_var + drop_var, axis=1)
 y = data['sit_al']
 
@@ -44,10 +64,6 @@ for color, i, target_name in zip(colors, [0, 1, 2], target_names):
 pl.legend(loc='best', shadow=False, scatterpoints=1)
 pl.title('PCA')
 pl.show() 
-# In[]
-
-#for k in ['nivel', 'turno', 'etnia', 'resp']:
-#    sns.factorplot    
 
 # In[]
 n_runs=1
