@@ -11,6 +11,8 @@ from sklearn.model_selection import cross_val_score, KFold, StratifiedKFold, Str
 from sklearn.metrics.classification import classification_report
 from sklearn import decomposition, preprocessing
 
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import RandomOverSampler
 
 # In[]
 # Loading Data
@@ -73,7 +75,7 @@ for run in range(0,n_runs):
    
    clf = RandomForestClassifier(n_estimators=100, class_weight='balanced_subsample', )
    
-   SSS = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=run)
+   SSS = StratifiedShuffleSplit(n_splits=1, test_size=0.30, random_state=run)
    for train_index, test_index in SSS.split(X.values, y.values):
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
@@ -81,9 +83,65 @@ for run in range(0,n_runs):
         y_pred=clf.predict(X_test)
         print(classification_report(y_pred, y_test))
    
-   n=len(clf.feature_importances_); 
-   pl.bar(range(n), clf.feature_importances_); 
-   pl.xticks(np.array(range(n))+0.5,X.columns.values, rotation=90)
-   pl.show()
-   
+#   n=len(clf.feature_importances_); 
+#   pl.bar(range(n), clf.feature_importances_); 
+#   pl.xticks(np.array(range(n))+0.5,X.columns.values, rotation=90)
+#   pl.show()
+  
+  
 # In[]   
+n_runs=1
+for run in range(0,n_runs):
+   random_seed=run
+   np.random.seed(random_seed)
+   
+   clf = RandomForestClassifier(n_estimators=100, class_weight='balanced_subsample', )
+
+   SSS = StratifiedShuffleSplit(n_splits=1, test_size=0.30, random_state=run)
+   for train_index, test_index in SSS.split(X.values, y.values):
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        
+        # Apply the random under-sampling
+        rus = RandomUnderSampler(return_indices=True)
+        X_resampled, y_resampled, idx_resampled = rus.fit_sample(X_train, y_train)
+
+        clf.fit(X_resampled,y_resampled)
+        y_pred=clf.predict(X_test)
+        print(classification_report(y_pred, y_test))
+
+
+#   n=len(clf.feature_importances_); 
+#   pl.bar(range(n), clf.feature_importances_); 
+#   pl.xticks(np.array(range(n))+0.5,X.columns.values, rotation=90)
+#   pl.show()   
+
+# In[]   
+n_runs=1
+for run in range(0,n_runs):
+   random_seed=run
+   np.random.seed(random_seed)
+   
+   clf = RandomForestClassifier(n_estimators=100, class_weight='balanced_subsample', )
+
+   SSS = StratifiedShuffleSplit(n_splits=1, test_size=0.30, random_state=run)
+   for train_index, test_index in SSS.split(X.values, y.values):
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        
+        # Apply the random over-sampling
+        ros = RandomOverSampler()
+        X_resampled, y_resampled = ros.fit_sample(X_train, y_train)
+
+        clf.fit(X_resampled,y_resampled)
+        y_pred=clf.predict(X_test)
+        print(classification_report(y_pred, y_test))
+                
+
+#   n=len(clf.feature_importances_); 
+#   pl.bar(range(n), clf.feature_importances_); 
+#   pl.xticks(np.array(range(n))+0.5,X.columns.values, rotation=90)
+#   pl.show()   
+
+# In[]   
+
