@@ -153,19 +153,17 @@ data['necessidades'] = data.necessidades.map(necessidades)
 #Pre-processamento transp
 data['transp'] = data.transp.map(transp)
 
-#Pre-processamento end_al
-le = preprocessing.LabelEncoder()
-le.fit(data['end_al'])
-data['end_al'] = le.transform(data['end_al'])
+#Pre-processamento bairro_al
+data['bairro_al'] = preprocessing.LabelEncoder().fit_transform([str(i) for i in data['bairro_al']])
 
 #Pre-processamento sexo
 data['sexo'] = data.sexo.map(sexo)
 
 y = np.asarray(data['sit_al'])
 
+del data['end_al']
 del data['necessidades']
 del data['sit_al']
-del data['bairro_al']
 X = data.values
 
 with open('output.csv', 'w', 1) as csvfile:
@@ -184,7 +182,7 @@ with open('output.csv', 'w', 1) as csvfile:
 				clf = RandomForestClassifier(n_estimators=10, class_weight='balanced')
 				clf.fit(X_train, y_train)
 				predicted = clf.predict(X_test)
-				precision.append(precision_score(y_test, predicted))
-				recall.append(recall_score(y_test, predicted))
-				fmeasure.append(fbeta_score(y_test, predicted, 2))
+				precision.append(precision_score(y_test, predicted, average='macro'))
+				recall.append(recall_score(y_test, predicted, average='macro'))
+				fmeasure.append(fbeta_score(y_test, predicted, 2, average='macro'))
 			spamwriter.writerow([str(combination), np.mean(precision), np.std(precision), np.mean(recall), np.std(recall), np.mean(fmeasure), np.std(fmeasure)])
